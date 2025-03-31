@@ -1,0 +1,52 @@
+
+# Giải thích về cơ chế Mounted/Unmounted trong Virtual Thread
+
+Khi nói về cơ chế Mounted/Unmounted của Virtual Threads, chúng ta đang đề cập đến mối quan hệ giữa Virtual Threads và Platform Threads (carrier threads). Đây là một trong những cơ chế quan trọng nhất giúp Virtual Threads đạt hiệu suất cao. Chi tiết như sau:
+
+## Cơ chế Mount/Unmount
+
+1. **Carrier Thread (Platform Thread)**:
+   - Là thread thực sự do hệ điều hành quản lý
+   - Có giới hạn về số lượng (thường khoảng vài nghìn)
+   - Tốn tài nguyên hệ thống (bộ nhớ, CPU)
+
+2. **Virtual Thread**:
+   - Được JVM quản lý, không phải hệ điều hành
+   - Có thể tạo hàng triệu virtual thread
+   - Nhẹ hơn nhiều về mặt tài nguyên (khoảng ~1KB mỗi thread)
+
+3. **Mount**:
+   - Khi một Virtual Thread cần thực thi, nó sẽ được "mount" (gắn) vào một carrier thread
+   - Carrier thread đóng vai trò như "phương tiện vận chuyển" để Virtual Thread có thể chạy trên CPU
+   - Một carrier thread tại một thời điểm chỉ có thể thực thi một Virtual Thread
+
+4. **Unmount**:
+   - Khi Virtual Thread thực hiện một hoạt động blocking (như I/O, sleep, wait, lock...), nó sẽ tự động "unmount" (tháo gắn) khỏi carrier thread
+   - Carrier thread được giải phóng để phục vụ các Virtual Thread khác
+   - Trạng thái của Virtual Thread được lưu lại trong bộ nhớ heap
+
+5. **Continuations**:
+   - Khi Virtual Thread bị unmount, trạng thái thực thi của nó được lưu trong một đối tượng gọi là "continuation"
+   - Continuation lưu trữ stack trace, local variables, program counter... của Virtual Thread
+   - Khi hoạt động blocking hoàn thành, Virtual Thread sẽ được mount lại vào một carrier thread (có thể là thread khác)
+   - Continuation được khôi phục và Virtual Thread tiếp tục thực thi từ điểm bị dừng
+
+## Ví dụ minh họa
+
+```
+1. Virtual Thread A được mount vào Carrier Thread X và bắt đầu thực thi
+2. Virtual Thread A gọi một hoạt động IO (ví dụ: đọc file)
+3. Virtual Thread A tự động unmount khỏi Carrier Thread X
+4. Carrier Thread X được giải phóng để mount Virtual Thread B
+5. Khi hoạt động IO của A hoàn thành, Virtual Thread A sẽ được mount vào một Carrier Thread có sẵn (có thể là X hoặc Y)
+6. Virtual Thread A tiếp tục thực thi từ điểm sau lệnh IO
+```
+
+## Lợi ích của cơ chế này
+
+- **Hiệu quả**: Với số lượng nhỏ carrier threads (thường là số lượng CPU cores), có thể phục vụ hàng triệu virtual threads
+- **Tự động**: Việc mount/unmount hoàn toàn tự động, lập trình viên không cần thực hiện thủ công
+- **Non-blocking**: Mặc dù code viết theo kiểu blocking, nhưng thực tế carrier threads không bị block
+- **Tận dụng tài nguyên**: Trong khi một Virtual Thread chờ IO, carrier thread vẫn có thể phục vụ các Virtual Thread khác
+
+Cơ chế này là lý do tại sao Virtual Threads rất hiệu quả cho các ứng dụng IO-bound mà không cần thay đổi mô hình lập trình sang reactive hoặc asynchronous.
