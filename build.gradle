@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'vn.vnpay.efin'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+application {
+    mainClass = 'vn.vnpay.efin.VirtualThreadDemo'
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Task để chạy bất kỳ lớp nào với tham số
+task runMain(type: JavaExec) {
+    group = 'application'
+    description = 'Chạy lớp chính được chỉ định với tham số'
+    
+    classpath = sourceSets.main.runtimeClasspath
+    
+    // Mặc định sẽ chạy VirtualThreadDemo nếu không có tham số
+    mainClass = project.properties.get('mainClass', 'vn.vnpay.efin.VirtualThreadDemo')
+    
+    // Cho phép truyền tham số dòng lệnh với --args="param1 param2"
+    if (project.hasProperty('args')) {
+        args = project.args.split('\\s+')
+    }
+}
