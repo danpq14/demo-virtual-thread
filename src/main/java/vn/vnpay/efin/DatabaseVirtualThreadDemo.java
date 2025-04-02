@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 public class DatabaseVirtualThreadDemo {
 
     // Số lượng truy vấn đồng thời
-    private static final int CONCURRENT_QUERIES = 1000;
+    private static final int CONCURRENT_QUERIES = 100;
     
     // Record để lưu kết quả truy vấn
     private record QueryResult(String tableName, String data) {}
@@ -27,12 +27,12 @@ public class DatabaseVirtualThreadDemo {
         compareSequentialVsConcurrent();
         
         // Demo truy vấn nhiều bảng đồng thời
-        System.out.println("\n2. Demo truy vấn nhiều bảng đồng thời:");
-        demoMultiTableQuery();
-        
-        // Xử lý batch với Virtual Thread
-        System.out.println("\n3. Xử lý batch với Virtual Thread:");
-        demoBatchProcessing();
+//        System.out.println("\n2. Demo truy vấn nhiều bảng đồng thời:");
+//        demoMultiTableQuery();
+//
+//        // Xử lý batch với Virtual Thread
+//        System.out.println("\n3. Xử lý batch với Virtual Thread:");
+//        demoBatchProcessing();
     }
     
     private static void compareSequentialVsConcurrent() throws Exception {
@@ -197,11 +197,8 @@ public class DatabaseVirtualThreadDemo {
             // Mô phỏng thời gian truy vấn database từ 50-150ms
             int delay = ThreadLocalRandom.current().nextInt(50, 150);
             Thread.sleep(delay);
-            
-            if (queryName.contains("0") && queryName.length() <= 8) {
-                System.out.println(queryName + " hoàn thành sau " + delay + 
-                        "ms trên " + Thread.currentThread());
-            }
+
+            System.out.println(queryName + " hoàn thành sau " + delay + "ms trên " + Thread.currentThread());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

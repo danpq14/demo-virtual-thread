@@ -18,6 +18,7 @@ java {
 
 application {
     mainClass = 'vn.vnpay.efin.VirtualThreadDemo'
+    sourceCompatibility = JavaVersion.VERSION_21
 }
 
 dependencies {
